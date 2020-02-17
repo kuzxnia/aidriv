@@ -11,7 +11,7 @@
 [![forthebadge](https://forthebadge.com/images/badges/built-with-love.svg)](https://forthebadge.com)
 
 <p  align="center">
-About • [Installation](#instalation) • Features • Authors
+About • ![Installation](#instalation) • Features • Authors
 </p>
 
 
