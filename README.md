@@ -11,14 +11,14 @@
 [![forthebadge](https://forthebadge.com/images/badges/built-with-love.svg)](https://forthebadge.com)
 
 <p  align="center">
-About • ![Installation](#instalation) • Features • Authors
+About • <a href="#instalation">Installation</a> • Features • Authors
 </p>
 
 
 ### About
 
 
-### Instalation
+### <a name="instalation">Instalation</a>
 
 aidriv is based on python and depends on the following major components:
 
@@ -28,7 +28,7 @@ aidriv is based on python and depends on the following major components:
 Since aidriv is written and based on Python you should install it if you don't have it yet. Aidriv is currently targeting the 3.8 branch of Python.
 
 Now you can install the python dependencies by calling:
-```
+```bash
 $ sudo apt-get install pipenv
 $ pipenv install --dev
-```bash
+```
