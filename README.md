@@ -1,5 +1,5 @@
 <p  align="center">
-<img src="https://github.com/kuzxnia/aidriv/blob/master/images/aidriv.png" alt="aidriv">
+<img src="https://github.com/kuzxnia/aidriv/blob/master/static/images/aidriv.png" alt="aidriv">
 </p>
 
 <p align="center"><b>self driving car toy</b></p>
