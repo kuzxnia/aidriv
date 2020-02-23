@@ -1,0 +1,21 @@
+{
+    "name": "aidriv",
+    "short_name": "aidriv",
+    "theme_color": "#3ed5da",
+    "background_color": "#2196f3",
+    "display": "standalone",
+    "Scope": "/",
+    "start_url": "/",
+    "icons": [{
+            "src": "images/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "images/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ],
+    "splash_pages": null
+}
