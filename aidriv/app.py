@@ -1,24 +1,53 @@
-import os
+from gevent import monkey
+monkey.patch_all()
 
-from bottle import route, run, static_file
+from flask import Flask, request, render_template, Response, stream_with_context, jsonify, send_file
+from gevent import pywsgi
+import gevent
+import cv2
 
-path = os.path.abspath(__file__)
-static_dir_path = os.path.dirname(os.path.dirname(path)) + "/static/"
+# Raspberry Pi camera module (requires picamera package)
+# from camera_pi import Camera
+
+app = Flask(__name__, static_folder='static')
 
 
-@route("/")
+@app.route('/')
 def index():
-    return static_file("index.html", root=static_dir_path)
+    """Video streaming home page."""
+    return render_template('index.html')
 
 
-@route(r"/<filename:re:.*\.png>")
-def images(filename):
-    return static_file(filename, root=static_dir_path, mimetype="image/png")
+@app.route("/<path:path>")
+def static_files(path):
+    return send_file(path)
 
 
-@route("/<filename:path>")
-def static_files(filename):
-    return static_file(filename, root=static_dir_path)
+@stream_with_context
+def gen():
+    """Video streaming generator function."""
+    camera = cv2.VideoCapture(0)
+    if not camera.isOpened():
+        raise RuntimeError('Could not start camera.')
+
+    while True:
+        # read current frame
+        _, img = camera.read()
+
+        # encode as a jpeg image and return it
+        frame = cv2.imencode('.jpg', img)[1].tobytes()
+        yield (b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 
-run(host="localhost", port=8080)
+@app.route('/video_feed')
+def video_feed():
+    """Video streaming route. Put this in the src attribute of an img tag."""
+    return Response(gen(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+if __name__ == '__main__':
+    app.run()
+    #server = pywsgi.WSGIServer(('0.0.0.0', 5000), app)
+    #server.serve_forever()
+
+
