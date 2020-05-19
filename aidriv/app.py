@@ -1,15 +1,27 @@
 from gevent import monkey
 monkey.patch_all()
 
-from flask import Flask, request, render_template, Response, stream_with_context, jsonify, send_file
+from flask import Flask, request, render_template, Response, stream_with_context, jsonify, send_file, url_for
 from gevent import pywsgi
-import gevent
+from flask_sockets import Sockets
+from geventwebsocket.handler import WebSocketHandler
+#import gevent
+from time import sleep
 import cv2
 
 # Raspberry Pi camera module (requires picamera package)
 # from camera_pi import Camera
 
 app = Flask(__name__, static_folder='static')
+sockets = Sockets(app)
+
+
+@sockets.route('/echo')
+def echo_socket(ws):
+    while not ws.closed:
+        message = ws.receive()
+        print(message)
+        ws.send(message)
 
 
 @app.route('/')
@@ -31,6 +43,7 @@ def gen():
         raise RuntimeError('Could not start camera.')
 
     while True:
+        sleep(0)
         # read current frame
         _, img = camera.read()
 
@@ -46,8 +59,7 @@ def video_feed():
 
 
 if __name__ == '__main__':
-    app.run()
-    #server = pywsgi.WSGIServer(('0.0.0.0', 5000), app)
-    #server.serve_forever()
+    server = pywsgi.WSGIServer(('0.0.0.0', 8000), app, handler_class=WebSocketHandler)
+    server.serve_forever()
 
 

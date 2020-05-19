@@ -16,6 +16,9 @@ pylint = "*"
 bottle = "*"
 flask = "*"
 gevent = "*"
+gunicorn = "*"
+opencv-python = "*"
+flask-sockets = "*"
 
 [dev-packages]
 flake8 = "*"
