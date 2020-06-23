@@ -14,7 +14,12 @@ ipython = "*"
 pre-commit = "*"
 pylint = "*"
 bottle = "*"
+flask = "*"
 gevent = "*"
+gunicorn = "*"
+flask-sockets = "*"
+picamera = "*"
+pigpio = "*"
 
 [dev-packages]
 flake8 = "*"

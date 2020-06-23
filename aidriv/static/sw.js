@@ -3,7 +3,7 @@ const staticAssets = [
     "/sw.js",
     "/manifest.json",
     "/fallback.html",
-    "/style.css",
+    "/styles.css",
     "/images/aidriv.png",
     "/images/icon-512x512.png",
     "/images/icon-192x192.png"

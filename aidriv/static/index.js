@@ -11,3 +11,5 @@ async function registerSW() {
         }
     }
 }
+
+document.getElementById("camera").src = "http://" + location.host + "/video_feed";

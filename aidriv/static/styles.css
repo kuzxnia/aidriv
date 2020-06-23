@@ -1,0 +1,151 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+#canvas_container {
+    background-image: url("images/joystick200.png");
+    border: 1px solid #272424;
+    border-radius: 10px;
+    height: 200px;
+    width: 200px;
+    position: static;
+    bottom: 40px;
+    margin-left: auto;
+    margin-right: auto;
+    /* this fixes the overflow:hidden in Chrome/Opera */
+    -webkit-mask-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAA5JREFUeNpiYGBgAAgwAAAEAAGbA+oJAAAAAElFTkSuQmCC);
+}
+
+#canvas {
+    height: 200px;
+    width: 200px;
+}
+
+#camera {
+    width: 95vw;
+    display: block;
+    margin: auto;
+    margin-top: 10px;
+}
+
+#switch {
+    display: block;
+    margin: auto;
+}
+
+.onoffswitch {
+    position: relative;
+    width: 120px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.onoffswitch-checkbox {
+    display: none;
+}
+
+.onoffswitch-label {
+    display: block;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid #999999;
+    border-radius: 20px;
+}
+
+.onoffswitch-inner {
+    display: block;
+    width: 200%;
+    margin-left: -100%;
+    transition: margin 0.3s ease-in 0s;
+}
+
+.onoffswitch-inner:before,
+.onoffswitch-inner:after {
+    display: block;
+    float: left;
+    width: 50%;
+    height: 40px;
+    padding: 0;
+    line-height: 40px;
+    font-size: 18px;
+    color: white;
+    font-family: Trebuchet, Arial, sans-serif;
+    font-weight: bold;
+    box-sizing: border-box;
+}
+
+.onoffswitch-inner:before {
+    content: "ON";
+    padding-left: 20px;
+    background-color: #618DE0;
+    color: #FFFFFF;
+}
+
+.onoffswitch-inner:after {
+    content: "OFF";
+    padding-right: 20px;
+    background-color: #EEEEEE;
+    color: #999999;
+    text-align: right;
+}
+
+.onoffswitch-switch {
+    display: block;
+    width: 20px;
+    margin: 10px;
+    background: #FFFFFF;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 76px;
+    border: 2px solid #999999;
+    border-radius: 20px;
+    transition: all 0.3s ease-in 0s;
+}
+
+.onoffswitch-checkbox:checked+.onoffswitch-label .onoffswitch-inner {
+    margin-left: 0;
+}
+
+.onoffswitch-checkbox:checked+.onoffswitch-label .onoffswitch-switch {
+    right: 0px;
+}
+
+@media only screen and (orientation: landscape) {
+    #canvas_container {
+        position: fixed;
+        bottom: 0;
+        right: 0;
+        opacity: 0.65;
+        /* if video will be displayed on a whole screen then
+        we can set opacity and make joystick to be displayed
+        over a video */
+    }
+    #camera {
+        width: auto;
+        height: 100vh;
+    }
+}
+
+@media only screen and (min-width: 768px) {
+    #canvas_container {
+        background-image: url("images/joystick200.png");
+        border: 1px solid #272424;
+        border-radius: 20px;
+        height: 200px;
+        width: 200px;
+        position: static;
+        bottom: auto;
+        right: auto;
+        opacity: 1;
+        margin-top: 40px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    #canvas {
+        height: 200px;
+        width: 200px;
+    }
+}
