@@ -17,8 +17,9 @@ bottle = "*"
 flask = "*"
 gevent = "*"
 gunicorn = "*"
-opencv-python = "*"
 flask-sockets = "*"
+picamera = "*"
+pigpio = "*"
 
 [dev-packages]
 flake8 = "*"

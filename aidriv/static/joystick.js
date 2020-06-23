@@ -7,7 +7,6 @@ let socket = new WebSocket("ws://" + location.host + "/echo");
 socket.onopen = function(e) {
     console.log("[open] Connection established");
     console.log("Sending to server");
-    socket.send("My name is John");
 };
 
 socket.onmessage = function(event) {
@@ -119,7 +118,7 @@ addEventListener("mousemove", event => {
         }
         if (mouse_change && click_on_canvas) {
             console.log("goraaa: " + vertical + " bok: " + horizontal);
-            socket.send("goraaa: " + vertical + " bok: " + horizontal);
+            socket.send("" + vertical + " " + horizontal);
             steering.innerHTML = vertical + ' : ' + horizontal;
         }
     }
@@ -142,7 +141,7 @@ addEventListener("mouseup", event => {
     dot.x = canvas.width / 2;
     dot.y = canvas.height / 2;
     console.log("tu wywołac 0 0 zatrzymanie pojazdu");
-    socket.send("gora: 0 bok: 0");
+    socket.send("0 0");
 });
 
 // Mobile event listeners
@@ -152,7 +151,7 @@ addEventListener("touchend", event => {
     dot.x = canvas.width / 2;
     dot.y = canvas.height / 2;
     console.log("tu wywołac 0 0 zatrzymanie pojazdu");
-    socket.send("gora: 0 bok: 0");
+    socket.send("0 0");
 });
 
 addEventListener("touchmove", event => {
@@ -179,7 +178,7 @@ addEventListener("touchmove", event => {
     }
     if (mouse_change) {
         console.log("gora: " + vertical + " bok: " + horizontal);
-        socket.send("gora: " + vertical + " bok: " + horizontal);
+    	socket.send("" + vertical + " " + horizontal);
         steering.innerHTML = vertical + ' : ' + horizontal;
     }
 });

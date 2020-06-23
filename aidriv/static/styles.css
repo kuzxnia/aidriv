@@ -4,21 +4,22 @@ body {
 }
 
 #canvas_container {
-    background-image: url("images/joystick140.png");
+    background-image: url("images/joystick200.png");
     border: 1px solid #272424;
     border-radius: 10px;
-    height: 140px;
-    width: 140px;
-    position: absolute;
+    height: 200px;
+    width: 200px;
+    position: static;
     bottom: 40px;
-    margin: auto;
+    margin-left: auto;
+    margin-right: auto;
     /* this fixes the overflow:hidden in Chrome/Opera */
     -webkit-mask-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAA5JREFUeNpiYGBgAAgwAAAEAAGbA+oJAAAAAElFTkSuQmCC);
 }
 
 #canvas {
-    height: 140px;
-    width: 140px;
+    height: 200px;
+    width: 200px;
 }
 
 #camera {
