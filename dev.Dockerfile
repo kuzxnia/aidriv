@@ -2,6 +2,8 @@ FROM resin/rpi-raspbian:buster
 
 ENV DEBIAN_FRONTEND noninteractive
 
+RUN [ "cross-build-start" ]
+
 # system deps:
 RUN apt-get update -qq -y \
     && apt-get install sudo \
@@ -50,6 +52,8 @@ COPY . $HOME
 # project initialization 
 RUN READTHEDOCS=True pipenv install --dev --deploy --ignore-pipfile \
         && sudo pigpiod
+
+RUN [ "cross-build-end" ]
 
 EXPOSE 8000
 CMD ['pipenv', 'run', 'python3', 'aidriv/app.py']
