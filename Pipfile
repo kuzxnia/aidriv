@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [requires]
-python_version = "3.8"
+python_version = "3.7.3"
 
 [scripts]
 manage = "./manage.py"
@@ -20,6 +20,7 @@ gunicorn = "*"
 flask-sockets = "*"
 picamera = "*"
 pigpio = "*"
+imutils = "*"
 
 [dev-packages]
 flake8 = "*"
