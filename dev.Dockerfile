@@ -1,7 +1,15 @@
-FROM resin/rpi-raspbian:buster
+FROM resin/rpi-raspbian:buster AS base
 
-ENV DEBIAN_FRONTEND noninteractive
+# Setup env
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONFAULTHANDLER 1
 
+
+FROM base AS python-deps
+
+# start cross build
 RUN [ "cross-build-start" ]
 
 # system deps:
@@ -19,9 +27,10 @@ RUN apt-get update -qq -y \
     python3-opencv \
     python3-dev \
     pigpio \
-    pipenv -qq -y \
-    make \
+    pipenv \
+    virtualenv \
     gcc \
+    make \
     musl-dev \
     libevent-dev \
     libatlas-base-dev \
@@ -40,20 +49,30 @@ RUN apt-get update -qq -y \
     && python3 -m pip install --upgrade pip setuptools wheel \
     && git clone git://github.com/yyuu/pyenv.git ~/.pyenv 
 
-
-ENV HOME /home/app
-ENV PYENV_ROOT $HOME/.pyenv
-ENV PATH $PYENV_ROOT/shims:$PYENV_ROOT/bin:$HOME/.local/bin:$PATH
-
-# copy and change working directory
-WORKDIR /home/app
-COPY . $HOME
-
-# project initialization 
-RUN READTHEDOCS=True pipenv install --dev --deploy --ignore-pipfile \
-        && sudo pigpiod
+COPY Pipfile .
+COPY Pipfile.lock .
+RUN READTHEDOCS=True \
+    PIPENV_VENV_IN_PROJECT=1 \
+    pipenv install --dev --deploy --ignore-pipfile
 
 RUN [ "cross-build-end" ]
 
+
+FROM base AS runtime
+
+# Copy virtual env from python-deps stage
+COPY --from=python-deps /.venv /.venv
+ENV PYENV_ROOT $HOME/.pyenv
+ENV PATH $PYENV_ROOT/shims:$PYENV_ROOT/bin:$HOME/.local/bin:$HOME/.venv/bin:$PATH
+
+# Create and switch to a new user
+
+# Install application into container
+COPY . .
+
+# project initialization 
+RUN sudo pigpiod
+
+# Run the application
 EXPOSE 8000
-CMD ['pipenv', 'run', 'python3', 'aidriv/app.py']
+ENTRYPOINT ['python3', 'aidriv/app.py']
