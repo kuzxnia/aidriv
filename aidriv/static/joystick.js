@@ -1,16 +1,23 @@
 const canvas = document.getElementById("canvas");
 const c = canvas.getContext("2d");
-const steering = document.getElementById("steering");
+const picture = document.getElementById("picture");
+const resolution = document.getElementById("resolution");
+const video = document.getElementById("video")
+const recording = document.getElementById("recording")
+const camera = document.getElementById("camera")
+const space = document.getElementById("space")
 
 let socket = new WebSocket("ws://" + location.host + "/echo");
 
 socket.onopen = function(e) {
     console.log("[open] Connection established");
-    console.log("Sending to server");
 };
 
 socket.onmessage = function(event) {
     console.log(`[message] Data received from server: ${event.data}`);
+    const stats = event.data.split(' ');
+    space.max = stats[0];
+    space.value = stats[1];
 };
 
 socket.onclose = function(event) {
@@ -26,6 +33,44 @@ socket.onclose = function(event) {
 socket.onerror = function(error) {
     console.log(`[error] ${error.message}`);
 };
+
+
+picture.onclick = function() {
+    camera.classList.remove('take-picture');
+    camera.offsetWidth;
+    socket.send('camera take_pic')
+    camera.classList.add('take-picture');
+}
+
+resolution.onchange = function() {
+    socket.send('camera resolution ' + resolution.value)
+}
+
+video.onclick = function() {
+    socket.send('camera ' + video.value)
+    if (video.value === "start_video") {
+        recording.style.visibility = 'visible';
+        video.value = 'stop_video';
+        timer();
+    } else {
+        recording.style.visibility = 'hidden';
+        video.value = 'start_video';
+        clearTimeout(t);
+        p.textContent = "00:00:00";
+        seconds = 0; minutes = 0; hours = 0;
+    }
+    if (video.classList.contains('start_video')) {
+        video.classList.remove('start_video');
+        video.classList.remove('fa-video');
+        video.classList.add('stop_video');
+        video.classList.add('fa-stop');
+    } else {
+        video.classList.remove('stop_video');
+        video.classList.remove('fa-stop');
+        video.classList.add('start_video');
+        video.classList.add('fa-video');
+    }
+}
 
 let canvas_dimensions, radius;
 
@@ -85,6 +130,7 @@ animate();
 window.addEventListener("load", () => {
     windowSizeChange();
     console.log('load');
+    socket.send('camera resolution ' + resolution.value)
 });
 window.addEventListener("orientationchange", () => {
     windowSizeChange();
@@ -119,7 +165,6 @@ addEventListener("mousemove", event => {
         if (mouse_change && click_on_canvas) {
             console.log("goraaa: " + vertical + " bok: " + horizontal);
             socket.send("" + vertical + " " + horizontal);
-            steering.innerHTML = vertical + ' : ' + horizontal;
         }
     }
 });
@@ -179,6 +224,5 @@ addEventListener("touchmove", event => {
     if (mouse_change) {
         console.log("gora: " + vertical + " bok: " + horizontal);
     	socket.send("" + vertical + " " + horizontal);
-        steering.innerHTML = vertical + ' : ' + horizontal;
     }
 });

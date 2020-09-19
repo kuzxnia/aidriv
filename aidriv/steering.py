@@ -31,7 +31,6 @@ class Steering:
         self.pi.write(self.right_in4, 0)
     
     def change_motors_speed(self, forward, turn):
-        print(f'change_motors_speed {forward} : {turn}')
         self.left_motor_pwm = 0
         self.right_motor_pwm = 0
 
@@ -92,7 +91,6 @@ class Steering:
                     self.pi.write(right_in3, 1)
                     self.pi.write(right_in4, 0)
 
-        print(f'left_pwm: {self.left_motor_pwm} right_pwm: {self.right_motor_pwm}')
         self.pi.hardware_PWM(left_pwm, freq, self.left_motor_pwm*10000)
         self.pi.hardware_PWM(right_pwm, freq, self.right_motor_pwm*10000)
         
