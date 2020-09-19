@@ -13,6 +13,8 @@
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/aidriv.png') }}">
     <!--This icon should be 192 or 180px with non transparent background-->
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <link href="{{ url_for('static', filename='fontawesome/css/all.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.css') }}" rel="stylesheet">
     <title>aidriv</title>
 </head>
 
@@ -21,25 +23,71 @@
         JavaScript is required to use aidriv.
     </noscript>
 
-    <img id="camera">
-
-    <div id="switch">
-        <div class="onoffswitch">
-            <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="myonoffswitch">
-            <label class="onoffswitch-label" for="myonoffswitch">
-                <span class="onoffswitch-inner"></span>
-                <span class="onoffswitch-switch"></span>
-            </label>
+    <div class="container">
+        <div class="row">
+                <img id="camera" src="{{ url_for('static', filename='images/loading.gif') }}">
+                <div id="recording">
+                    <img src="{{ url_for('static', filename='images/red-dot.gif') }}">
+                    <p><time>00:00:00</time></p>
+                </div>
         </div>
-    </div>
-    <p>Autonomous mode</p>
+            
 
-    <p id='steering'>0 : 0</p>
-    <div id="canvas_container">
-        <canvas id="canvas"></canvas>
+        <div class="row justify-content-center">
+            <div class="buttons col col-md-5 align-self-center">
+                    <div class="row no-gutters">
+                        <div class="col-3">
+                            <select id="resolution">
+                                <option value="320x240">320x240</option>
+                                <option value="640x480">640x480</option>
+                                <option value="1280x960">1280x960</option>
+                            </select>
+                        </div>
+                        <div class="col-3">
+                            <button id="picture" class="rounded-btn">
+                                <i class="fas fa-camera"></i>
+                            </button>
+                        </div>
+                        <div class="col-3">
+                            <button id="video" value="start_video" class="rounded-btn fas fa-video start_video"></button>
+                        </div>
+                        <div class="col-3">
+                            <form action="{{ url_for('gallery') }}">
+                                <button type="submit" value="" id="gallery-btn" class="rounded-btn">
+                                    <i class="fas fa-photo-video"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <label for="space">Pamięć:&nbsp;</label> 
+            <progress id="space"></progress>
+        </div>
+
+        <div class="autonomous">
+        Tryb autonomiczny
+        <div id="switch">
+            <div class="onoffswitch">
+                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="myonoffswitch">
+                <label class="onoffswitch-label" for="myonoffswitch">
+                    <span class="onoffswitch-inner"></span>
+                    <span class="onoffswitch-switch"></span>
+                </label>
+            </div>
+        </div>
+        </div>
+
+        <div id="canvas_container">
+            <canvas id="canvas"></canvas>
+        </div>
+
     </div>
 
     <script src="{{ url_for('static', filename='joystick.js') }}"></script>
+    <script src="{{ url_for('static', filename='timer.js') }}"></script>
     <script src="{{ url_for('static', filename='index.js') }}"></script>
 </body>
 
