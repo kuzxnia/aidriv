@@ -53,11 +53,16 @@ def echo_socket(ws):
             if options[1] == 'take_pic':
                 camera.take_picture()
             elif options[1] == 'resolution':
-                camera.resolution = [int(n) for n in options[2].split('x')]
+                camera.resolution = tuple(int(n) for n in options[2].split('x'))
             elif options[1] == 'start_video':
                 camera.start_video()
             elif options[1] == 'stop_video':
                 spawn(camera.stop_video)
+        elif message[:2] == 'ai':
+            if message.split()[1] == 'true':
+                print('wlacz ai')
+            else:
+                print('wylacz ai')
         else:
             forward, turn = message.split()
             steering.change_motors_speed(int(forward), int(turn))
