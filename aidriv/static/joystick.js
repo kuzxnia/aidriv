@@ -2,10 +2,12 @@ const canvas = document.getElementById("canvas");
 const c = canvas.getContext("2d");
 const picture = document.getElementById("picture");
 const resolution = document.getElementById("resolution");
-const video = document.getElementById("video")
-const recording = document.getElementById("recording")
-const camera = document.getElementById("camera")
-const space = document.getElementById("space")
+const video = document.getElementById("video");
+const recording = document.getElementById("recording");
+const camera = document.getElementById("camera");
+const space = document.getElementById("space");
+const autonomy_switch = document.getElementById("myonoffswitch");
+
 
 let socket = new WebSocket("ws://" + location.host + "/echo");
 
@@ -165,6 +167,8 @@ addEventListener("mousemove", event => {
         if (mouse_change && click_on_canvas) {
             console.log("goraaa: " + vertical + " bok: " + horizontal);
             socket.send("" + vertical + " " + horizontal);
+            if (autonomy_switch.checked) socket.send("ai false");
+            autonomy_switch.checked = false;
         }
     }
 });
@@ -181,22 +185,26 @@ addEventListener("mousedown", event => {
 });
 
 addEventListener("mouseup", event => {
+    if (click_on_canvas) {
+        console.log("zatrzymuje pojazd");
+        socket.send("0 0");
+    }
     click_on_canvas = false;
     mouse_down = false;
     dot.x = canvas.width / 2;
     dot.y = canvas.height / 2;
-    console.log("tu wywołac 0 0 zatrzymanie pojazdu");
-    socket.send("0 0");
 });
 
 // Mobile event listeners
 
 addEventListener("touchend", event => {
+    if (click_on_canvas) {
+        console.log("zatrzymuje pojazd");
+        socket.send("0 0");
+    }
     click_on_canvas = false;
     dot.x = canvas.width / 2;
     dot.y = canvas.height / 2;
-    console.log("tu wywołac 0 0 zatrzymanie pojazdu");
-    socket.send("0 0");
 });
 
 addEventListener("touchmove", event => {
@@ -224,5 +232,17 @@ addEventListener("touchmove", event => {
     if (mouse_change) {
         console.log("gora: " + vertical + " bok: " + horizontal);
     	socket.send("" + vertical + " " + horizontal);
+        if (autonomy_switch.checked) socket.send("ai false");
+        autonomy_switch.checked = false;
+    }
+});
+
+autonomy_switch.addEventListener('change', (event) => {
+    if (autonomy_switch.checked) {
+        socket.send("ai true");
+        console.log("ai true");
+    } else {
+        socket.send("ai false");
+        console.log("ai false");
     }
 });
