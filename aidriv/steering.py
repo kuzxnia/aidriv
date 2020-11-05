@@ -1,99 +1,76 @@
-import pigpio
+import RPi.GPIO as GPIO
 
 freq = 50
 
-left_in1 = 27
-left_in2 = 23
-left_pwm = 13
+left_in1, left_in2, left_pwm = 26, 19, 21
+right_in3, right_in4, right_pwm = 13, 6, 5
 
-right_in3 = 4
-right_in4 = 17
-right_pwm = 12
 
 class Steering:
     def __init__(self):
-        self.left_in1 = left_in1
-        self.left_in2 = left_in2
-        self.left_pwm = left_pwm
-        self.right_in3 = right_in3
-        self.right_in4 = right_in4
-        self.right_pwm = right_pwm
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setwarnings(False)
+
+        self.set_gpio_out()
+        self.reset_pwm_duty()
+        self.set_pwm()
+        self.set_qpio_low()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.left_pwm.stop()
+        self.right_pwm.stop()
+        GPIO.cleanup()
+
+    def set_gpio_out(self):
+        for pin in [left_in1, left_in2, left_pwm, right_in3, right_in4, right_pwm]:
+            GPIO.setup(pin, GPIO.OUT)
+
+    def set_pwm(self):
+        self.left_pwm = GPIO.PWM(left_pwm, freq)
+        self.left_pwm.start(self.left_pwm_duty)
+
+        self.right_pwm = GPIO.PWM(right_pwm, freq)
+        self.right_pwm.start(self.right_pwm_duty)
+
+    def update_pwm(self):
+        self.left_pwm.ChangeDutyCycle(self.left_pwm_duty)
+        self.right_pwm.ChangeDutyCycle(self.right_pwm_duty)
+
+    def set_qpio_low(self):
+        for pin in [left_in1, left_in2, right_in3, right_in4]:
+            GPIO.output(pin, GPIO.LOW)
+
+    def reset_pwm_duty(self):
         self.left_pwm_duty = 0
         self.right_pwm_duty = 0
-        self.pi = pigpio.pi()
-        self.pi.set_mode(self.left_in1, pigpio.OUTPUT)
-        self.pi.set_mode(self.left_in2, pigpio.OUTPUT)
-        self.pi.set_mode(self.right_in3, pigpio.OUTPUT)
-        self.pi.set_mode(self.right_in4, pigpio.OUTPUT)
-        self.pi.write(self.left_in1, 0)
-        self.pi.write(self.left_in2, 0)
-        self.pi.write(self.right_in3, 0)
-        self.pi.write(self.right_in4, 0)
-    
+
+    def set_gpio(self, l1, l2, r1, r2):
+        GPIO.output(left_in1, l1)
+        GPIO.output(left_in2, l2)
+        GPIO.output(right_in3, r1)
+        GPIO.output(right_in4, r2)
+
+    def recalculate_pwm(self, forward, turn):
+        '''forward and turn depends from quater'''
+        forward = abs(forward)
+
+        self.left_pwm_duty = forward * (turn + 100) / 200
+        self.right_pwm_duty = forward - self.left_pwm_duty
+
     def change_motors_speed(self, forward, turn):
         print(f'change_motors_speed {forward} : {turn}')
-        self.left_motor_pwm = 0
-        self.right_motor_pwm = 0
+        self.left_pwm_duty = 0
+        self.right_pwm_duty = 0
 
         if forward >= 0:
-            if forward >= abs(turn):
-                if turn >= 0:#1st segment
-                    self.left_motor_pwm = forward
-                    self.right_motor_pwm = forward - turn
-                elif turn < 0:#8th segment
-                    self.left_motor_pwm = forward - abs(turn)
-                    self.right_motor_pwm = forward
-                    
-                self.pi.write(left_in1, 0)
-                self.pi.write(left_in2, 1)
-                self.pi.write(right_in3, 0)
-                self.pi.write(right_in4, 1)
-            else:
-                if turn >= 0:#2nd segment
-                    self.left_motor_pwm = forward
-                    self.right_motor_pwm = turn - forward
-                    self.pi.write(left_in1, 0)
-                    self.pi.write(left_in2, 1)
-                    self.pi.write(right_in3, 1)
-                    self.pi.write(right_in4, 0)
-                elif turn < 0:#7th segment
-                    self.left_motor_pwm = abs(turn) - forward
-                    self.right_motor_pwm = forward
-                    self.pi.write(left_in1, 1)
-                    self.pi.write(left_in2, 0)
-                    self.pi.write(right_in3, 0)
-                    self.pi.write(right_in4, 1)
-        elif forward < 0:
-            if abs(forward) >= abs(turn):
-                if turn >= 0:#4th segment
-                    self.left_motor_pwm = abs(forward)
-                    self.right_motor_pwm = abs(forward) - turn
-                elif turn < 0:#5th segment
-                    self.left_motor_pwm = abs(forward) - abs(turn)
-                    self.right_motor_pwm = abs(forward)
-                    
-                self.pi.write(left_in1, 1)
-                self.pi.write(left_in2, 0)
-                self.pi.write(right_in3, 1)
-                self.pi.write(right_in4, 0)
-            else:
-                if turn >= 0:#3rd segment
-                    self.left_motor_pwm = abs(forward)
-                    self.right_motor_pwm = turn - abs(forward)
-                    self.pi.write(left_in1, 1)
-                    self.pi.write(left_in2, 0)
-                    self.pi.write(right_in3, 0)
-                    self.pi.write(right_in4, 1)
-                elif turn < 0:#6th segment
-                    self.left_motor_pwm =  abs(turn)- abs(forward)
-                    self.right_motor_pwm = abs(forward)
-                    self.pi.write(left_in1, 0)
-                    self.pi.write(left_in2, 1)
-                    self.pi.write(right_in3, 1)
-                    self.pi.write(right_in4, 0)
+            self.set_gpio(GPIO.LOW, GPIO.HIGH, GPIO.LOW, GPIO.HIGH)
+        else:
+            self.set_gpio(GPIO.HIGH, GPIO.LOW, GPIO.HIGH, GPIO.LOW)
 
-        print(f'left_pwm: {self.left_motor_pwm} right_pwm: {self.right_motor_pwm}')
-        self.pi.hardware_PWM(left_pwm, freq, self.left_motor_pwm*10000)
-        self.pi.hardware_PWM(right_pwm, freq, self.right_motor_pwm*10000)
-        
-    
+        self.recalculate_pwm(forward, turn)
+
+        print(f'left_pwm: {self.left_pwm_duty} right_pwm: {self.right_pwm_duty}')
+        self.update_pwm()
