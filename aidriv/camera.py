@@ -22,7 +22,6 @@ class Camera:
     def get_frames(self):
         time.sleep(2)
 
-        i = 0
         while True:
             self.frame_full = self.vs.read()
             self.frame = imutils.resize(self.frame_full, width=320, height=240)

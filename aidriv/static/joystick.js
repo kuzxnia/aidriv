@@ -1,80 +1,7 @@
 const canvas = document.getElementById("canvas");
 const c = canvas.getContext("2d");
-const picture = document.getElementById("picture");
-const resolution = document.getElementById("resolution");
-const video = document.getElementById("video");
-const recording = document.getElementById("recording");
-const camera = document.getElementById("camera");
-const space = document.getElementById("space");
-const autonomy_switch = document.getElementById("myonoffswitch");
-
-
-let socket = new WebSocket("ws://" + location.host + "/echo");
-
-socket.onopen = function(e) {
-    console.log("[open] Connection established");
-};
-
-socket.onmessage = function(event) {
-    console.log(`[message] Data received from server: ${event.data}`);
-    const stats = event.data.split(' ');
-    space.max = stats[0];
-    space.value = stats[1];
-};
-
-socket.onclose = function(event) {
-    if (event.wasClean) {
-        console.log(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
-    } else {
-        // e.g. server process killed or network down
-        // event.code is usually 1006 in this case
-        console.log('[close] Connection died');
-    }
-};
-
-socket.onerror = function(error) {
-    console.log(`[error] ${error.message}`);
-};
-
-
-picture.onclick = function() {
-    camera.classList.remove('take-picture');
-    camera.offsetWidth;
-    socket.send('camera take_pic')
-    camera.classList.add('take-picture');
-}
-
-resolution.onchange = function() {
-    socket.send('camera resolution ' + resolution.value)
-}
-
-video.onclick = function() {
-    socket.send('camera ' + video.value)
-    if (video.value === "start_video") {
-        recording.style.visibility = 'visible';
-        video.value = 'stop_video';
-        timer();
-    } else {
-        recording.style.visibility = 'hidden';
-        video.value = 'start_video';
-        clearTimeout(t);
-        p.textContent = "00:00:00";
-        seconds = 0; minutes = 0; hours = 0;
-    }
-    if (video.classList.contains('start_video')) {
-        video.classList.remove('start_video');
-        video.classList.remove('fa-video');
-        video.classList.add('stop_video');
-        video.classList.add('fa-stop');
-    } else {
-        video.classList.remove('stop_video');
-        video.classList.remove('fa-stop');
-        video.classList.add('start_video');
-        video.classList.add('fa-video');
-    }
-}
-
 let canvas_dimensions, radius;
+
 
 function getJoyStickPosition() {
     canvas_dimensions = canvas.getBoundingClientRect();
@@ -89,6 +16,7 @@ let mouse = {
 };
 
 let mouse_down = false;
+
 
 class JoyStick {
     constructor(x, y, radius, color) {
@@ -110,14 +38,13 @@ class JoyStick {
     }
 }
 
-let dot = undefined;
 
+let dot = undefined;
 function windowSizeChange() {
     getJoyStickPosition();
     dot = new JoyStick(canvas.width / 2, canvas.height / 2, radius, "blue");
 }
 
-windowSizeChange();
 
 function animate() {
     c.clearRect(0, 0, canvas.width, canvas.height); // Erase whole canvas
@@ -125,21 +52,28 @@ function animate() {
     requestAnimationFrame(animate); // Create an animation loop
 }
 
+
+windowSizeChange();
 animate();
 
-// Event Listeners
 
+// Event Listeners
 window.addEventListener("load", () => {
     windowSizeChange();
     console.log('load');
-    socket.send('camera resolution ' + resolution.value)
+    socket.send('resolution ' + resolution.value)
 });
+
+
 window.addEventListener("orientationchange", () => {
     windowSizeChange();
 });
+
+
 window.addEventListener("resize", () => {
     windowSizeChange();
 });
+
 
 let mouse_change = false,
     click_on_canvas = false,
@@ -147,6 +81,8 @@ let mouse_change = false,
     vertical_old = 0,
     horizontal = 0,
     horizontal_old = 0;
+
+
 addEventListener("mousemove", event => {
     mouse.x = event.clientX;
     mouse.y = event.clientY;
@@ -167,11 +103,12 @@ addEventListener("mousemove", event => {
         if (mouse_change && click_on_canvas) {
             console.log("goraaa: " + vertical + " bok: " + horizontal);
             socket.send("" + vertical + " " + horizontal);
-            if (autonomy_switch.checked) socket.send("ai false");
+            if (autonomy_switch.checked) socket.send("ai_false");
             autonomy_switch.checked = false;
         }
     }
 });
+
 
 addEventListener("mousedown", event => {
     mouse_down = true;
@@ -184,6 +121,7 @@ addEventListener("mousedown", event => {
     }
 });
 
+
 addEventListener("mouseup", event => {
     if (click_on_canvas) {
         console.log("zatrzymuje pojazd");
@@ -195,8 +133,8 @@ addEventListener("mouseup", event => {
     dot.y = canvas.height / 2;
 });
 
-// Mobile event listeners
 
+// Mobile event listeners
 addEventListener("touchend", event => {
     if (click_on_canvas) {
         console.log("zatrzymuje pojazd");
@@ -206,6 +144,7 @@ addEventListener("touchend", event => {
     dot.x = canvas.width / 2;
     dot.y = canvas.height / 2;
 });
+
 
 addEventListener("touchmove", event => {
     mouse_change = false;
@@ -232,17 +171,7 @@ addEventListener("touchmove", event => {
     if (mouse_change) {
         console.log("gora: " + vertical + " bok: " + horizontal);
     	socket.send("" + vertical + " " + horizontal);
-        if (autonomy_switch.checked) socket.send("ai false");
+        if (autonomy_switch.checked) socket.send("ai_false");
         autonomy_switch.checked = false;
-    }
-});
-
-autonomy_switch.addEventListener('change', (event) => {
-    if (autonomy_switch.checked) {
-        socket.send("ai true");
-        console.log("ai true");
-    } else {
-        socket.send("ai false");
-        console.log("ai false");
     }
 });
