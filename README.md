@@ -22,7 +22,7 @@ About • <a href="#instalation">Installation</a> • Features • Authors
 
 aidriv is based on python and depends on the following major components:
 
-* [Flask](https://bottlepy.org) web application microframework for Python
+* [Flask](https://flask.palletsprojects.com/en/1.1.x/) web application microframework for Python
 * [gevent](http://www.gevent.org) coroutine-based network library for Python
 
 Since aidriv is written and based on Python you should install it if you don't have it yet. Aidriv is currently targeting the 3.8 branch of Python.
