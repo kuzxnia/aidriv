@@ -41,7 +41,7 @@ class Steering:
 
         left_motor = int((1 - piv_scale) * left_motor + piv_scale * (turn))
         right_motor = int((1 - piv_scale) * right_motor + piv_scale * (-turn))
-        print(f'{left_motor} : {right_motor}')
+        
         if left_motor >= 0:
             self.pi.write(left_in1, 0)
             self.pi.write(left_in2, 1)

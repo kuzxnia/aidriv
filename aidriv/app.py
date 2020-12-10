@@ -2,15 +2,15 @@ from gevent import monkey
 monkey.patch_all()
 
 import os
+from shutil import disk_usage
 
 import cv2
-from flask import (Flask, Response, render_template, send_file,
-                   stream_with_context, request)
+from flask import Flask, Response, render_template, send_file
 from flask_sockets import Sockets
+from gevent import sleep, spawn
+
 from camera import Camera
 from steering import Steering
-from gevent import spawn, sleep
-from shutil import disk_usage
 
 GALLERY_ROOT_DIR = os.path.join(os.path.dirname(__file__), 'static', 'gallery', '')
 
@@ -29,7 +29,7 @@ def generate(cam):
             sleep(0.01)
             continue
 
-        (flag, encodedImage) = cv2.imencode(".jpg", cam.frame)
+        flag, encodedImage = cv2.imencode(".jpg", cam.frame)
         cam.frame = None
 
         # ensure the frame was successfully encoded
@@ -42,41 +42,35 @@ def generate(cam):
         sleep(0.01)
 
 
-@sockets.route('/echo')
+@sockets.route('/')
 def echo_socket(ws):
     while not ws.closed:
-        stats = disk_usage("/")
-        ws.send(f"{stats.total} {stats.used}")
-        message = ws.receive()
-        if message[:6] == 'camera':
-            options = message.split()
-            if options[1] == 'take_pic':
-                camera.take_picture()
-            elif options[1] == 'resolution':
-                camera.resolution = tuple(int(n) for n in options[2].split('x'))
-            elif options[1] == 'start_video':
-                camera.start_video()
-            elif options[1] == 'stop_video':
-                spawn(camera.stop_video)
-        elif message[:2] == 'ai':
-            if message.split()[1] == 'true':
-                print('wlacz ai')
-            else:
-                print('wylacz ai')
+        mess = ws.receive()
+        message = mess.split()
+        if message[0] == 'take_pic': camera.take_picture()
+        elif message[0] == 'start_video': camera.start_video()
+        elif message[0] == 'stop_video': spawn(camera.stop_video)
+        elif message[0] == 'resolution': camera.resolution = tuple(int(n) for n in message[1].split('x'))
+        elif message[0] == 'ai_true': print('wlacz tryb autonomiczny')
+        elif message[0] == 'ai_false': print('wylacz tryb autonomiczny')
+        elif message[0] == 'disk_usage':
+            stats = disk_usage("/")
+            ws.send(f"{stats.total} {stats.used}")
         else:
-            forward, turn = message.split()
+            forward, turn = mess.split()
             steering.change_motors_speed(int(forward), int(turn))
     steering.change_motors_speed(0, 0)
 
 
 @app.route('/', methods=['GET'])
 def index():
-    """Video streaming home page."""
+    """App home page."""
     return render_template('index.html')
 
 
 @app.route('/gallery', methods=['GET'])
 def gallery():
+    """Gallery page"""
     files = [f for f in os.listdir(app.config['GALLERY_FOLDER']) if os.path.isfile(os.path.join(app.config['GALLERY_FOLDER'], f))]
     files = sorted(files, reverse=True)
     return render_template('gallery.html', files=files)
