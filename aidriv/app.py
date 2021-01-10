@@ -1,18 +1,24 @@
 from gevent import monkey
 monkey.patch_all()
 
+import os
+from shutil import disk_usage
+
 import cv2
-from flask import (Flask, Response, render_template, send_file,
-                   stream_with_context)
+from flask import Flask, Response, render_template, send_file
 from flask_sockets import Sockets
+from gevent import sleep, spawn
+
 from camera import Camera
 from steering import Steering
-from gevent import spawn, sleep
+
+GALLERY_ROOT_DIR = os.path.join(os.path.dirname(__file__), 'static', 'gallery', '')
 
 app = Flask(__name__, static_folder='static')
+app.config['GALLERY_FOLDER'] = GALLERY_ROOT_DIR
 sockets = Sockets(app)
 steering = Steering()
-camera = Camera()
+camera = Camera(app.config['GALLERY_FOLDER'])
 
 #creating greenthread for getting frames from camera
 spawn(camera.get_frames)
@@ -20,36 +26,54 @@ spawn(camera.get_frames)
 def generate(cam):
     while True:
         if cam.frame is None:
-            sleep(0)
+            sleep(0.01)
             continue
 
-        (flag, encodedImage) = cv2.imencode(".jpg", cam.frame)
+        flag, encodedImage = cv2.imencode(".jpg", cam.frame)
         cam.frame = None
 
         # ensure the frame was successfully encoded
         if not flag:
             continue
 
-        print('yield')
         yield(b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + 
             bytearray(encodedImage) + b'\r\n')
         
-        sleep(0.02)
+        sleep(0.01)
 
 
-@sockets.route('/echo')
+@sockets.route('/')
 def echo_socket(ws):
     while not ws.closed:
-        message = ws.receive()
-        forward, turn = message.split()
-        steering.change_motors_speed(int(forward), int(turn))
+        mess = ws.receive()
+        message = mess.split()
+        if message[0] == 'take_pic': camera.take_picture()
+        elif message[0] == 'start_video': camera.start_video()
+        elif message[0] == 'stop_video': spawn(camera.stop_video)
+        elif message[0] == 'resolution': camera.resolution = tuple(int(n) for n in message[1].split('x'))
+        elif message[0] == 'ai_true': print('wlacz tryb autonomiczny')
+        elif message[0] == 'ai_false': print('wylacz tryb autonomiczny')
+        elif message[0] == 'disk_usage':
+            stats = disk_usage("/")
+            ws.send(f"{stats.total} {stats.used}")
+        else:
+            forward, turn = mess.split()
+            steering.change_motors_speed(int(forward), int(turn))
     steering.change_motors_speed(0, 0)
 
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def index():
-    """Video streaming home page."""
+    """App home page."""
     return render_template('index.html')
+
+
+@app.route('/gallery', methods=['GET'])
+def gallery():
+    """Gallery page"""
+    files = [f for f in os.listdir(app.config['GALLERY_FOLDER']) if os.path.isfile(os.path.join(app.config['GALLERY_FOLDER'], f))]
+    files = sorted(files, reverse=True)
+    return render_template('gallery.html', files=files)
 
 
 @app.route("/<path:path>")

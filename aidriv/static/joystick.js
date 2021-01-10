@@ -1,33 +1,7 @@
 const canvas = document.getElementById("canvas");
 const c = canvas.getContext("2d");
-const steering = document.getElementById("steering");
-
-let socket = new WebSocket("ws://" + location.host + "/echo");
-
-socket.onopen = function(e) {
-    console.log("[open] Connection established");
-    console.log("Sending to server");
-};
-
-socket.onmessage = function(event) {
-    console.log(`[message] Data received from server: ${event.data}`);
-};
-
-socket.onclose = function(event) {
-    if (event.wasClean) {
-        console.log(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
-    } else {
-        // e.g. server process killed or network down
-        // event.code is usually 1006 in this case
-        console.log('[close] Connection died');
-    }
-};
-
-socket.onerror = function(error) {
-    console.log(`[error] ${error.message}`);
-};
-
 let canvas_dimensions, radius;
+
 
 function getJoyStickPosition() {
     canvas_dimensions = canvas.getBoundingClientRect();
@@ -42,6 +16,7 @@ let mouse = {
 };
 
 let mouse_down = false;
+
 
 class JoyStick {
     constructor(x, y, radius, color) {
@@ -63,14 +38,13 @@ class JoyStick {
     }
 }
 
-let dot = undefined;
 
+let dot = undefined;
 function windowSizeChange() {
     getJoyStickPosition();
     dot = new JoyStick(canvas.width / 2, canvas.height / 2, radius, "blue");
 }
 
-windowSizeChange();
 
 function animate() {
     c.clearRect(0, 0, canvas.width, canvas.height); // Erase whole canvas
@@ -78,20 +52,28 @@ function animate() {
     requestAnimationFrame(animate); // Create an animation loop
 }
 
+
+windowSizeChange();
 animate();
 
-// Event Listeners
 
+// Event Listeners
 window.addEventListener("load", () => {
     windowSizeChange();
     console.log('load');
+    socket.send('resolution ' + resolution.value)
 });
+
+
 window.addEventListener("orientationchange", () => {
     windowSizeChange();
 });
+
+
 window.addEventListener("resize", () => {
     windowSizeChange();
 });
+
 
 let mouse_change = false,
     click_on_canvas = false,
@@ -99,6 +81,8 @@ let mouse_change = false,
     vertical_old = 0,
     horizontal = 0,
     horizontal_old = 0;
+
+
 addEventListener("mousemove", event => {
     mouse.x = event.clientX;
     mouse.y = event.clientY;
@@ -119,10 +103,12 @@ addEventListener("mousemove", event => {
         if (mouse_change && click_on_canvas) {
             console.log("goraaa: " + vertical + " bok: " + horizontal);
             socket.send("" + vertical + " " + horizontal);
-            steering.innerHTML = vertical + ' : ' + horizontal;
+            if (autonomy_switch.checked) socket.send("ai_false");
+            autonomy_switch.checked = false;
         }
     }
 });
+
 
 addEventListener("mousedown", event => {
     mouse_down = true;
@@ -135,24 +121,30 @@ addEventListener("mousedown", event => {
     }
 });
 
+
 addEventListener("mouseup", event => {
+    if (click_on_canvas) {
+        console.log("zatrzymuje pojazd");
+        socket.send("0 0");
+    }
     click_on_canvas = false;
     mouse_down = false;
     dot.x = canvas.width / 2;
     dot.y = canvas.height / 2;
-    console.log("tu wywołac 0 0 zatrzymanie pojazdu");
-    socket.send("0 0");
 });
 
-// Mobile event listeners
 
+// Mobile event listeners
 addEventListener("touchend", event => {
+    if (click_on_canvas) {
+        console.log("zatrzymuje pojazd");
+        socket.send("0 0");
+    }
     click_on_canvas = false;
     dot.x = canvas.width / 2;
     dot.y = canvas.height / 2;
-    console.log("tu wywołac 0 0 zatrzymanie pojazdu");
-    socket.send("0 0");
 });
+
 
 addEventListener("touchmove", event => {
     mouse_change = false;
@@ -179,6 +171,7 @@ addEventListener("touchmove", event => {
     if (mouse_change) {
         console.log("gora: " + vertical + " bok: " + horizontal);
     	socket.send("" + vertical + " " + horizontal);
-        steering.innerHTML = vertical + ' : ' + horizontal;
+        if (autonomy_switch.checked) socket.send("ai_false");
+        autonomy_switch.checked = false;
     }
 });
