@@ -50,9 +50,10 @@ def echo_socket(ws):
         if message[0] == 'take_pic': camera.take_picture()
         elif message[0] == 'start_video': camera.start_video()
         elif message[0] == 'stop_video': spawn(camera.stop_video)
-        elif message[0] == 'resolution': camera.resolution = tuple(int(n) for n in message[1].split('x'))
         elif message[0] == 'ai_true': print('wlacz tryb autonomiczny')
         elif message[0] == 'ai_false': print('wylacz tryb autonomiczny')
+        elif message[0] == 'resolution':
+            camera.resolution = tuple(int(n) for n in message[1].split('x'))
         elif message[0] == 'disk_usage':
             stats = disk_usage("/")
             ws.send(f"{stats.total} {stats.used}")
@@ -71,7 +72,8 @@ def index():
 @app.route('/gallery', methods=['GET'])
 def gallery():
     """Gallery page"""
-    files = [f for f in os.listdir(app.config['GALLERY_FOLDER']) if os.path.isfile(os.path.join(app.config['GALLERY_FOLDER'], f))]
+    files = [f for f in os.listdir(app.config['GALLERY_FOLDER'])
+        if os.path.isfile(os.path.join(app.config['GALLERY_FOLDER'], f))]
     files = sorted(files, reverse=True)
     return render_template('gallery.html', files=files)
 
