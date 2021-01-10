@@ -11,6 +11,7 @@ from gevent import sleep, spawn
 
 from camera import Camera
 from steering import Steering
+from lane_detection import getLaneCurve
 
 GALLERY_ROOT_DIR = os.path.join(os.path.dirname(__file__), 'static', 'gallery', '')
 
@@ -45,6 +46,7 @@ def generate(cam):
 
 @sockets.route('/')
 def echo_socket(ws):
+    global ai_mode
     while not ws.closed:
         mess = ws.receive()
         message = mess.split()
@@ -63,6 +65,7 @@ def echo_socket(ws):
             ws.send(f"{stats.total} {stats.used}")
         else:
             if ai_mode:
+                getLaneCurve(camera.frame, -1)
             else:
                 forward, turn = mess.split()
                 steering.change_motors_speed(int(forward), int(turn))

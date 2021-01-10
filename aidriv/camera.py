@@ -20,10 +20,13 @@ class Camera:
         self.stop_record = False
 
     def get_frames(self):
+        print('starting camera')
         time.sleep(2)
+        print('camera started')
 
         while True:
             self.frame_full = self.vs.read()
+
             self.frame = imutils.resize(self.frame_full, width=320, height=240)
             if self.start_record:
                 date_string = datetime.now().strftime("%Y%m%d-%H%M%S-%f")
