@@ -85,7 +85,7 @@ def echo_socket(ws):
         elif not ai_mode:
             forward, turn = mess.split()
             steering.change_motors_speed(int(forward), int(turn))
-        steering.change_motors_speed(0, 0)
+    steering.change_motors_speed(0, 0)
 
 
 @app.route('/', methods=['GET'])
