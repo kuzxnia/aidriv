@@ -19,6 +19,7 @@ app.config['GALLERY_FOLDER'] = GALLERY_ROOT_DIR
 sockets = Sockets(app)
 steering = Steering()
 camera = Camera(app.config['GALLERY_FOLDER'])
+ai_mode = False
 
 #creating greenthread for getting frames from camera
 spawn(camera.get_frames)
@@ -51,15 +52,21 @@ def echo_socket(ws):
         elif message[0] == 'start_video': camera.start_video()
         elif message[0] == 'stop_video': spawn(camera.stop_video)
         elif message[0] == 'resolution': camera.resolution = tuple(int(n) for n in message[1].split('x'))
-        elif message[0] == 'ai_true': print('wlacz tryb autonomiczny')
-        elif message[0] == 'ai_false': print('wylacz tryb autonomiczny')
+        elif message[0] == 'ai_true': 
+            ai_mode = True
+            print(f'ai mode {ai_mode}')
+        elif message[0] == 'ai_false': 
+            ai_mode = False
+            print(f'ai mode {ai_mode}')
         elif message[0] == 'disk_usage':
             stats = disk_usage("/")
             ws.send(f"{stats.total} {stats.used}")
         else:
-            forward, turn = mess.split()
-            steering.change_motors_speed(int(forward), int(turn))
-    steering.change_motors_speed(0, 0)
+            if ai_mode:
+            else:
+                forward, turn = mess.split()
+                steering.change_motors_speed(int(forward), int(turn))
+        steering.change_motors_speed(0, 0)
 
 
 @app.route('/', methods=['GET'])

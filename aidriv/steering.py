@@ -1,4 +1,4 @@
-import pigpio
+import RPi.GPIO as GPIO
 
 freq = 50
 left_in1, left_in2, left_pwm = 27, 23, 13
