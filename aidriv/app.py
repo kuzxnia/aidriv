@@ -30,9 +30,28 @@ def generate(cam):
         if cam.frame is None:
             sleep(0.01)
             continue
+        if ai_mode:
+            frame, curve = getLaneCurve(cam.frame, -1)
 
-        flag, encodedImage = cv2.imencode(".jpg", cam.frame)
+            print(f'curve {curve}')
+            if abs(curve) > 25:
+                curve *= -2
+                if abs(curve) > 100:
+                    curve = 100 if curve > 0 else -100
+                steering.change_motors_speed(75, curve)
+            else:
+                steering.change_motors_speed(100, curve * -2)
+
+            # czy konieczne
+            sleep(1/10 - 1/500)
+            steering.change_motors_speed(0, 0)
+            sleep(1/500)
+        else:
+            frame = cam.frame
+
+        flag, encodedImage = cv2.imencode(".jpg", frame)
         cam.frame = None
+
 
         # ensure the frame was successfully encoded
         if not flag:
@@ -63,12 +82,9 @@ def echo_socket(ws):
         elif message[0] == 'disk_usage':
             stats = disk_usage("/")
             ws.send(f"{stats.total} {stats.used}")
-        else:
-            if ai_mode:
-                getLaneCurve(camera.frame, -1)
-            else:
-                forward, turn = mess.split()
-                steering.change_motors_speed(int(forward), int(turn))
+        elif not ai_mode:
+            forward, turn = mess.split()
+            steering.change_motors_speed(int(forward), int(turn))
         steering.change_motors_speed(0, 0)
 
 

@@ -1,4 +1,4 @@
-import RPi.GPIO as GPIO
+import pigpio
 
 freq = 50
 left_in1, left_in2, left_pwm = 27, 23, 13
@@ -58,5 +58,3 @@ class Steering:
 
         self.pi.hardware_PWM(left_pwm, freq, abs(left_motor)*10000)
         self.pi.hardware_PWM(right_pwm, freq, abs(right_motor)*10000)
-        
-    

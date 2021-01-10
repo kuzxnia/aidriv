@@ -11,6 +11,7 @@ from imutils.video import VideoStream
 
 class Camera:
     def __init__(self, path):
+        # self.vs = VideoStream(usePiCamera=1).start()
         self.vs = VideoStream(usePiCamera=1, resolution=(1280, 960), framerate=25).start()
         self.frame_full = None
         self.frame = None
@@ -23,6 +24,7 @@ class Camera:
         print('starting camera')
         time.sleep(2)
         print('camera started')
+        skipped = 0
 
         while True:
             self.frame_full = self.vs.read()
