@@ -38,14 +38,14 @@ def generate(cam):
                 curve *= -2
                 if abs(curve) > 100:
                     curve = 100 if curve > 0 else -100
-                steering.change_motors_speed(75, curve)
+                steering.change_motors_speed_ai(75, curve)
             else:
-                steering.change_motors_speed(100, curve * -2)
+                steering.change_motors_speed_ai(100, curve * -2)
 
             # czy konieczne
-            sleep(1/10 - 1/500)
-            steering.change_motors_speed(0, 0)
-            sleep(1/500)
+            #sleep(1/10 - 1/500)
+            #steering.change_motors_speed(0, 0)
+            #sleep(1/500)
         else:
             frame = cam.frame
 
@@ -78,6 +78,7 @@ def echo_socket(ws):
             print(f'ai mode {ai_mode}')
         elif message[0] == 'ai_false': 
             ai_mode = False
+            steering.change_motors_speed(0, 0)
             print(f'ai mode {ai_mode}')
         elif message[0] == 'disk_usage':
             stats = disk_usage("/")
