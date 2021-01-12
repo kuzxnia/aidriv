@@ -13,7 +13,7 @@ from keras.models import load_model
 from camera import Camera
 from steering import Steering
 from lane_detection import getLaneCurve
-from utils import get_prediction, getClassName
+from utils import get_prediction, getClassName, localization
 
 GALLERY_ROOT_DIR = os.path.join(os.path.dirname(__file__), 'static', 'gallery', '')
 
@@ -44,18 +44,17 @@ def generate(cam):
             )
 
             # for specific size
-            x, y, z = sign.shape
             if coordinate:  # and 90 > x > 40 and 90 > y > 40:
+                x, y, z = sign.shape
                 # scale sign to 32x32
-                sign = cv2.resize(sign, (640, 480))
-                prediction = get_prediction(model, sign)
 
-                if prediction > 0:
-                    text = getClassName(prediction)  # fill with correct class
-                    cv2.putText(frame, text, (coordinate[0][0], coordinate[0][1] - 15), cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 255), 2, cv2.LINE_4)
-                    frame = cv2.rectangle(frame, coordinate[0], coordinate[1], (255, 255, 255), 1)
+                prediction = get_prediction(model, sign)[0]
+                
+                frame = cv2.rectangle(frame, coordinate[0], coordinate[1], (255, 255, 255), 1)
+                text = getClassName(prediction)
+                cv2.putText(frame, text, (coordinate[0][0], coordinate[0][1] - 15), cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 255), 2, cv2.LINE_4)
 
-            print(f'curve {curve}')
+            # print(f'curve {curve}')
             if abs(curve) > 25:
                 curve *= -2
                 if abs(curve) > 100:

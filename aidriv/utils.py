@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import imutils
+from math import sqrt
 
 
 def tresholding_otsu(img):
@@ -32,10 +33,6 @@ def wrapImg(img, points, w, h, inv=False):
     matrix = cv2.getPerspectiveTransform(pts1, pts2)
     imgWrap = cv2.warpPerspective(img, matrix, (w, h))
     return imgWrap
-
-
-def empty(a):
-    pass
 
 
 def initializeTracebars(initializeTracbarVals, wT=320, hT=240):
@@ -177,8 +174,8 @@ def removeSmallComponents(image, threshold):
 def findContour(image):
     # find contours in the thresholded image
     cnts = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-    cnts = cnts[0] if imutils.is_cv2() else cnts[1]
-    return cnts
+    # cnts = cnts[0] if imutils.is_cv2() else cnts[1]
+    return cnts[0]
 
 
 def contourIsSign(perimeter, centroid, threshold):
@@ -225,7 +222,7 @@ def findLargestSign(image, contours, threshold, distance_theshold):
     coordinate = None
     sign = None
     for c in contours:
-        M = cv2.moments(c)
+        M = cv2.moments(c.astype('float32'))
         if M["m00"] == 0:
             continue
         cX = int(M["m10"] / M["m00"])
@@ -247,9 +244,7 @@ def localization(image, min_size_components, similitary_contour_with_circle):
     binary_image = preprocess_image(image)
     binary_image = removeSmallComponents(binary_image, min_size_components)
     binary_image = cv2.bitwise_and(binary_image, binary_image, mask=remove_other_color(image))
-    cv2.imshow('b3', binary_image)
 
-    cv2.imshow('BINARY IMAGE', binary_image)
     contours = findContour(binary_image)
     sign, coordinate = findLargestSign(original_image, contours, similitary_contour_with_circle, 15)
 
@@ -280,7 +275,9 @@ def remove_other_color(img):
 
 
 def getClassName(classNo):
-    if classNo == 0:
+    if classNo == -1:
+        return 'unknown'
+    elif classNo == 0:
         return 'Speed Limit 30 km/h'
     elif classNo == 1:
         return 'Speed Limit 70 km/h'
@@ -290,8 +287,15 @@ def getClassName(classNo):
         return 'No entry'
 
 
+def preprocessing(img):
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img = cv2.equalizeHist(img)
+    return img / 255
+
+
 def get_prediction(model, img):
-    img = img.reshape(1, 32, 32, 1)
+    img = preprocessing(img)
+    img = cv2.resize(img, (32, 32)).reshape(1, 32, 32, 1)
     predictions = model.predict(img)
 
-    return model.predict_classes(img) if np.amax(predictions) > threshold else -1
+    return model.predict_classes(img) if np.amax(predictions) > 0.75 else [-1]

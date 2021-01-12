@@ -45,7 +45,7 @@ def getLaneCurve(img, display=1):
         imgLaneColor = cv2.bitwise_and(imgInvWarp, imgLaneColor)
         imgResult = cv2.addWeighted(imgResult, 1, imgLaneColor, 1, 0)
         midY = 450
-        cv2.putText(imgResult, str(curve), (wT // 2 - 20, 85), cv2.FONT_HERSHEY_COMPLEX, 2, (255, 0, 255), 3)
+        cv2.putText(imgResult, str(curve), (wT // 2 - 20, 85), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 0, 255), 3)
         cv2.line(imgResult, (wT // 2, midY), (wT // 2 + (curve * 3), midY), (255, 0, 255), 5)
         cv2.line(imgResult, ((wT // 2 + (curve * 3)), midY - 25), (wT // 2 + (curve * 3), midY + 25), (0, 255, 0), 5)
         for x in range(-30, 30):
