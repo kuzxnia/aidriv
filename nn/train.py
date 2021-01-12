@@ -19,6 +19,7 @@ from keras.preprocessing.image import ImageDataGenerator
 path = "myData"  # folder with all the class folders
 labelFile = 'labels.csv'  # file with all names of classes
 batch_size_val = 50  # how many to process together
+batch_size = 20  # how many to process together
 steps_per_epoch_val = 2000
 epochs_val = 10
 imageDimesions = (32, 32, 3)
@@ -39,7 +40,10 @@ for count in sorted(myList):
     myPicList = os.listdir(path + "/" + str(count))
     for y in myPicList:
         curImg = cv2.imread(path + "/" + str(count) + "/" + y)
-        images.append(curImg)
+        if curImg is None:
+            continue
+        img = cv2.resize(curImg, (32, 32))
+        images.append(img)
         classNo.append(count)
     print(count, end=" ")
 print(" ")
@@ -66,6 +70,7 @@ assert (X_train.shape[0] == y_train.shape[
 assert (X_validation.shape[0] == y_validation.shape[
     0]), "The number of images in not equal to the number of lables in validation set"
 assert (X_test.shape[0] == y_test.shape[0]), "The number of images in not equal to the number of lables in test set"
+print(X_train.shape[1:])
 assert (X_train.shape[1:] == (imageDimesions)), " The dimesions of the Training images are wrong "
 assert (X_validation.shape[1:] == (imageDimesions)), " The dimesionas of the Validation images are wrong "
 assert (X_test.shape[1:] == (imageDimesions)), " The dimesionas of the Test images are wrong"
@@ -75,29 +80,30 @@ data = pd.read_csv(labelFile)
 print("data shape ", data.shape, type(data))
 
 ############################### DISPLAY SOME SAMPLES IMAGES  OF ALL THE CLASSES
-if False:
-    num_of_samples = []
-    cols = 5
-    num_classes = noOfClasses
-    fig, axs = plt.subplots(nrows=num_classes, ncols=cols, figsize=(5, 300))
-    fig.tight_layout()
-    for i in range(cols):
-        for j, row in data.iterrows():
-            x_selected = X_train[y_train == j]
-            axs[j][i].imshow(x_selected[random.randint(0, len(x_selected) - 1), :, :], cmap=plt.get_cmap("gray"))
-            axs[j][i].axis("off")
-            if i == 2:
-                axs[j][i].set_title(str(j) + "-" + row["Name"])
-                num_of_samples.append(len(x_selected))
+num_of_samples = []
+cols = 5
+num_classes = noOfClasses
+fig, axs = plt.subplots(nrows=num_classes, ncols=cols, figsize=(5, 300))
+fig.tight_layout()
+for i in range(cols):
+    for j, row in data.iterrows():
+        x_selected = X_train[y_train == j]
+        if len(x_selected) == 0:
+            continue
+        axs[j][i].imshow(x_selected[random.randint(0, len(x_selected) - 1), :, :], cmap=plt.get_cmap("gray"))
+        axs[j][i].axis("off")
+        if i == 2:
+            axs[j][i].set_title(str(j) + "-" + row["Name"])
+            num_of_samples.append(len(x_selected))
 
 ############################### DISPLAY A BAR CHART SHOWING NO OF SAMPLES FOR EACH CATEGORY
-    print(num_of_samples)
-    plt.figure(figsize=(12, 4))
-    plt.bar(range(0, num_classes), num_of_samples)
-    plt.title("Distribution of the training dataset")
-    plt.xlabel("Class number")
-    plt.ylabel("Number of images")
-    plt.show()
+print(num_of_samples)
+plt.figure(figsize=(12, 4))
+# plt.bar(range(0, num_classes), num_of_samples)
+plt.title("Distribution of the training dataset")
+plt.xlabel("Class number")
+plt.ylabel("Number of images")
+plt.show()
 
 
 ############################### PREPROCESSING THE IMAGES
@@ -139,7 +145,7 @@ dataGen = ImageDataGenerator(width_shift_range=0.1,
                              rotation_range=10)  # DEGREES
 dataGen.fit(X_train)
 batches = dataGen.flow(X_train, y_train,
-                       batch_size=20)  # REQUESTING DATA GENRATOR TO GENERATE IMAGES  BATCH SIZE = NO. OF IMAGES CREAED EACH TIME ITS CALLED
+                       batch_size=batch_size)  # REQUESTING DATA GENRATOR TO GENERATE IMAGES  BATCH SIZE = NO. OF IMAGES CREAED EACH TIME ITS CALLED
 X_batch, y_batch = next(batches)
 
 # TO SHOW AGMENTED IMAGE SAMPLES
@@ -184,12 +190,20 @@ def myModel():
     return model
 
 
+batch_size_val = 50  # how many to process together
+steps_per_epoch_val = len(X_train)//batch_size
+epochs_val = 10
+
 ############################### TRAIN
 model = myModel()
 print(model.summary())
-history = model.fit_generator(dataGen.flow(X_train, y_train, batch_size=batch_size_val),
-                              steps_per_epoch=steps_per_epoch_val, epochs=epochs_val,
-                              validation_data=(X_validation, y_validation), shuffle=1)
+history = model.fit_generator(
+    dataGen.flow(X_train, y_train, batch_size=batch_size),
+    steps_per_epoch=steps_per_epoch_val,
+    epochs=epochs_val,
+    validation_data=(X_validation, y_validation),
+    shuffle=1
+)
 
 ############################### PLOT
 plt.figure(1)
@@ -210,8 +224,5 @@ print('Test Score:', score[0])
 print('Test Accuracy:', score[1])
 
 # STORE THE MODEL AS A PICKLE OBJECT
-#pickle_out = open("model_trained.p", "wb")  # wb = WRITE BYTE
-model.save("model_trained.p")
-#pickle.dump(model, pickle_out)
-pickle_out.close()
+model.save("model_trained.h5")
 cv2.waitKey(0)
