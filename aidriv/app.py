@@ -47,15 +47,14 @@ def generate(cam):
             if coordinate:  # and 90 > x > 40 and 90 > y > 40:
                 x, y, z = sign.shape
                 # scale sign to 32x32
-                prediction = get_prediction(model, sign)
 
+                prediction = get_prediction(model, sign)[0]
+                
                 frame = cv2.rectangle(frame, coordinate[0], coordinate[1], (255, 255, 255), 1)
-                print(prediction)
-                if prediction > 0:
-                    text = getClassName(prediction)  # fill with correct class
-                    cv2.putText(frame, text, (coordinate[0][0], coordinate[0][1] - 15), cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 255), 2, cv2.LINE_4)
+                text = getClassName(prediction)
+                cv2.putText(frame, text, (coordinate[0][0], coordinate[0][1] - 15), cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 255), 2, cv2.LINE_4)
 
-            print(f'curve {curve}')
+            # print(f'curve {curve}')
             if abs(curve) > 25:
                 curve *= -2
                 if abs(curve) > 100:

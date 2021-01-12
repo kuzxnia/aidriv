@@ -13,6 +13,7 @@ class Camera:
     def __init__(self, path):
         # self.vs = VideoStream(usePiCamera=1).start()
         self.vs = VideoStream(usePiCamera=1, resolution=(1280, 960), framerate=25).start()
+        self.vs.camera.brightness = 55
         self.frame_full = None
         self.frame = None
         self.resolution = (1280, 960)

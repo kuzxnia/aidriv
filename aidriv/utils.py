@@ -275,7 +275,9 @@ def remove_other_color(img):
 
 
 def getClassName(classNo):
-    if classNo == 0:
+    if classNo == -1:
+        return 'unknown'
+    elif classNo == 0:
         return 'Speed Limit 30 km/h'
     elif classNo == 1:
         return 'Speed Limit 70 km/h'
@@ -296,4 +298,4 @@ def get_prediction(model, img):
     img = cv2.resize(img, (32, 32)).reshape(1, 32, 32, 1)
     predictions = model.predict(img)
 
-    return model.predict_classes(img) if np.amax(predictions) > 0.75 else -1
+    return model.predict_classes(img) if np.amax(predictions) > 0.75 else [-1]
