@@ -8,10 +8,12 @@ import cv2
 from flask import Flask, Response, render_template, send_file
 from flask_sockets import Sockets
 from gevent import sleep, spawn
+from keras.models import load_model
 
 from camera import Camera
 from steering import Steering
 from lane_detection import getLaneCurve
+from utils import get_prediction, getClassName
 
 GALLERY_ROOT_DIR = os.path.join(os.path.dirname(__file__), 'static', 'gallery', '')
 
@@ -20,10 +22,12 @@ app.config['GALLERY_FOLDER'] = GALLERY_ROOT_DIR
 sockets = Sockets(app)
 steering = Steering()
 camera = Camera(app.config['GALLERY_FOLDER'])
+model = load_model('model.h5')
 ai_mode = False
 
 #creating greenthread for getting frames from camera
 spawn(camera.get_frames)
+
 
 def generate(cam):
     while True:
@@ -32,6 +36,24 @@ def generate(cam):
             continue
         if ai_mode:
             frame, curve = getLaneCurve(cam.frame, -1)
+
+            coordinate, image, sign = localization(
+                cam.frame,
+                300,  # min_components_size,
+                0.65  # similitary_contour_with_circle
+            )
+
+            # for specific size
+            x, y, z = sign.shape
+            if coordinate:  # and 90 > x > 40 and 90 > y > 40:
+                # scale sign to 32x32
+                sign = cv2.resize(sign, (640, 480))
+                prediction = get_prediction(model, sign)
+
+                if prediction > 0:
+                    text = getClassName(prediction)  # fill with correct class
+                    cv2.putText(frame, text, (coordinate[0][0], coordinate[0][1] - 15), cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 255), 2, cv2.LINE_4)
+                    frame = cv2.rectangle(frame, coordinate[0], coordinate[1], (255, 255, 255), 1)
 
             print(f'curve {curve}')
             if abs(curve) > 25:
@@ -51,7 +73,6 @@ def generate(cam):
 
         flag, encodedImage = cv2.imencode(".jpg", frame)
         cam.frame = None
-
 
         # ensure the frame was successfully encoded
         if not flag:
