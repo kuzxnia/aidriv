@@ -15,39 +15,31 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
     <link href="{{ url_for('static', filename='fontawesome/css/all.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.css') }}" rel="stylesheet">
-    <title>aidriv - gallery</title>
+    <title>aidriv</title>
 </head>
 
 <body>
-    <noscript>
-        JavaScript is required to use aidriv.
-    </noscript>
-
-        <form action="{{ url_for('index') }}">
-            <input type="submit" value="&#8249; Powrót" class="rounded-btn btn btn-primary"/>
-        </form>
-
     <div class="container">
         <div class="row">
-        {% for file in files %}
-            <div class="col-xs-12 col-md-6 col-xl-4 pt-3">
-            {% if file[-3:] == 'mp4' %}
-                <video src="{{ url_for('static' , filename='gallery/' + file) }}" controls class="gallery"></video>
-            {% else %}
-                <img src="{{ url_for('static' , filename='gallery/' + file) }}" class="gallery">
-            {% endif %}
-                <div class="title">
-                    {{file}}
-                    </br>
-                    <a href="{{ url_for('static' , filename='gallery/' + file) }}" download>
-                        <i class="fa fa-download"></i> Pobierz
-                    </a>
-                </div>
-            </div>
-        {% endfor %}
+                <img id="camera" src="{{ url_for('static', filename='images/loading.gif') }}">
+        </div>
+            
+        <div class="row justify-content-center">
+            <form action="{{ url_for('index') }}" method='POST'>
+                {% for v in values %}
+                    <div>
+                        <input id="rangeInput{{loop.index}}" name="range{{loop.index}}" type="range" value={{v}} min="0" max="240"/>
+                        <input id="amount{{loop.index}}" type="number" value={{v}} min="0" max="240"/>
+                    </div>
+                {% endfor %}
+                <input type="submit" value="Anuluj" name="anuluj" class="rounded-btn btn btn-primary"/>
+                <input type="submit" value="Zapisz" name="zapisz" class="rounded-btn btn btn-primary"/>
+            </form>
         </div>
     </div>
 
+    <script src="{{ url_for('static', filename='websocket_calibration.js') }}"></script>
+    <script src="{{ url_for('static', filename='index.js') }}"></script>
 </body>
 
 </html>

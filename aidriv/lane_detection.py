@@ -6,10 +6,9 @@ import numpy as np
 
 curveList = []
 avgVal = 10
-initialTrackBarVals = [70, 155, 60, 227]
 
 
-def getLaneCurve(img, display=1):
+def getLaneCurve(img, initialTrackBarVals, display=1):
     imgResult = img.copy()
 
     # #### STEP 1
@@ -17,7 +16,7 @@ def getLaneCurve(img, display=1):
 
     # #### STEP 2
     hT, wT, c = img.shape
-    # points = utils.valTrackbars()
+    #points = utils.valTrackbars()
     points = utils.calculate_points(wT, hT, *initialTrackBarVals)
     imgWarp = utils.wrapImg(imgThresOtsu, points, wT, hT)
     # imgWarpPoints = utils.drawPoints(imgCopy, points)

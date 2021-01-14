@@ -5,7 +5,7 @@ import os
 from shutil import disk_usage
 
 import cv2
-from flask import Flask, Response, render_template, send_file
+from flask import Flask, Response, render_template, send_file, request
 from flask_sockets import Sockets
 from gevent import sleep, spawn
 from keras.models import load_model
@@ -14,6 +14,7 @@ from camera import Camera
 from steering import Steering
 from lane_detection import getLaneCurve
 from utils import get_prediction, getClassName, localization
+from track_bar_vals import initialTrackBarVals
 
 GALLERY_ROOT_DIR = os.path.join(os.path.dirname(__file__), 'static', 'gallery', '')
 
@@ -24,18 +25,26 @@ steering = Steering()
 camera = Camera(app.config['GALLERY_FOLDER'])
 model = load_model('model.h5')
 ai_mode = False
+speed = 60
+stoped = False
+calibration = False
+copy_track_vals = initialTrackBarVals.copy()
 
 #creating greenthread for getting frames from camera
 spawn(camera.get_frames)
 
 
 def generate(cam):
+    global speed, stoped, calibration
     while True:
+        prediction = -1
+        coordinate = None
+        x, y , z = 0, 0, 0
         if cam.frame is None:
             sleep(0.01)
             continue
-        if ai_mode:
-            frame, curve = getLaneCurve(cam.frame, -1)
+        if ai_mode or calibration:
+            frame, curve = getLaneCurve(cam.frame, initialTrackBarVals, -1)
 
             coordinate, image, sign = localization(
                 cam.frame,
@@ -44,24 +53,31 @@ def generate(cam):
             )
 
             # for specific size
-            if coordinate:  # and 90 > x > 40 and 90 > y > 40:
+            if coordinate and not calibration:  # and 90 > x > 40 and 90 > y > 40:
                 x, y, z = sign.shape
                 # scale sign to 32x32
 
                 prediction = get_prediction(model, sign)[0]
-                
+
                 frame = cv2.rectangle(frame, coordinate[0], coordinate[1], (255, 255, 255), 1)
                 text = getClassName(prediction)
+                print(text, x, y)
                 cv2.putText(frame, text, (coordinate[0][0], coordinate[0][1] - 15), cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 255), 2, cv2.LINE_4)
 
-            # print(f'curve {curve}')
-            if abs(curve) > 25:
-                curve *= -2
-                if abs(curve) > 100:
-                    curve = 100 if curve > 0 else -100
-                steering.change_motors_speed_ai(75, curve)
-            else:
-                steering.change_motors_speed_ai(100, curve * -2)
+            #if abs(curve) > 25:
+            #    curve *= -4
+            #    if abs(curve) > 100:
+            #        curve = 100 if curve > 0 else -100
+            #    steering.change_motors_speed_ai(75, curve)
+            #else:
+            #    steering.change_motors_speed_ai(100, curve * -2)
+            #    pass
+            curve *= 4
+            if abs(curve) > 100:
+                curve = 100 if curve > 0 else -100
+            if ai_mode:
+                print(f'curve {curve}')
+                steering.change_motors_speed_ai(speed, curve)
 
             # czy konieczne
             #sleep(1/10 - 1/500)
@@ -80,6 +96,20 @@ def generate(cam):
         yield(b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + 
             bytearray(encodedImage) + b'\r\n')
         
+        if ai_mode and coordinate and 90 > x > 25 and 90 > y > 25:
+            if prediction == 0:
+                speed = 40
+            elif prediction == 1:
+                speed = 60
+            elif prediction == 2:
+                if not stoped:
+                    steering.change_motors_speed(0, 0)
+                    sleep(4)
+                    stoped = True
+            elif prediction == 3:
+                steering.change_motors_speed(0, 0)
+                sleep(4)
+
         sleep(0.01)
 
 
@@ -109,9 +139,39 @@ def echo_socket(ws):
     steering.change_motors_speed(0, 0)
 
 
-@app.route('/', methods=['GET'])
+@sockets.route('/calibration')
+def echo_socket(ws):
+    global initialTrackBarVals
+    while not ws.closed:
+        mess = ws.receive()
+        print(mess)
+        vals = []
+        for m in mess.split(','):
+            vals.append(int(m))
+        initialTrackBarVals = vals
+
+@app.route('/', methods=['GET', 'POST'])
 def index():
     """App home page."""
+    global initialTrackBarVals, calibration, copy_track_vals
+    calibration = False
+    if request.method == 'POST':
+        print('indeex ', request.form)
+        vals = []
+        for name, val in request.form.items():
+            if name == 'zapisz':
+                continue
+            elif name == 'anuluj':
+                initialTrackBarVals = copy_track_vals
+                return render_template('index.html')
+            vals.append(int(val))
+        print('po returnie z anulacji')
+        initialTrackBarVals = copy_track_vals = vals
+        vals = map(str, vals)
+        vals = ' ,'.join(vals) 
+        f = open('track_bar_vals.py', 'w')
+        f.write('initialTrackBarVals = [' + vals + ']')
+        f.close()
     return render_template('index.html')
 
 
@@ -121,6 +181,15 @@ def gallery():
     files = [f for f in os.listdir(app.config['GALLERY_FOLDER']) if os.path.isfile(os.path.join(app.config['GALLERY_FOLDER'], f))]
     files = sorted(files, reverse=True)
     return render_template('gallery.html', files=files)
+
+
+@app.route('/settings', methods=['GET'])
+def settings():
+    """Settings page"""
+    global calibration
+    calibration = True
+    print('settings: ', initialTrackBarVals)
+    return render_template('settings.html', values=initialTrackBarVals)
 
 
 @app.route("/<path:path>")

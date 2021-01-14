@@ -24,6 +24,7 @@ class Steering:
             self.pi.write(pin, 0)
 
     def change_motors_speed(self, forward, turn):
+        print(f'{forward}  {turn}')
         if forward >= 0:
             left_motor = 100 if turn>= 0 else 100 + turn
             right_motor = 100 - turn if turn>= 0 else 100
@@ -53,8 +54,9 @@ class Steering:
             self.pi.write(right_in3, 1)
             self.pi.write(right_in4, 0)
 
-        self.pi.hardware_PWM(left_pwm, freq, abs(left_motor)*10000)
-        self.pi.hardware_PWM(right_pwm, freq, abs(right_motor)*10000)
+        print(f'left: {left_motor}, right: {right_motor}')
+        self.pi.hardware_PWM(left_pwm, freq, abs(left_motor)*9000)
+        self.pi.hardware_PWM(right_pwm, freq, abs(right_motor)*9000)
 
     def change_motors_speed_ai(self, forward, turn):
         aforward = abs(forward)
@@ -73,5 +75,6 @@ class Steering:
             self.pi.write(right_in3, 1)
             self.pi.write(right_in4, 0)
 
-        self.pi.hardware_PWM(left_pwm, freq, abs(left_motor)*10000)
-        self.pi.hardware_PWM(right_pwm, freq, abs(right_motor)*10000)
+        print(f'left: {left_motor}, right: {right_motor}')
+        self.pi.hardware_PWM(left_pwm, freq, abs(left_motor)*7000)
+        self.pi.hardware_PWM(right_pwm, freq, abs(right_motor)*7000)

@@ -25,7 +25,7 @@
 
     <div class="container">
         <div class="row">
-                <img id="camera" src="{{ url_for('static', filename='images/loading.gif') }}">
+                <img id="camera" src="{{ url_for('static', filename='images/loading.gif') }}" onclick="window.location.href='{{ url_for('settings') }}'">
                 <div id="recording">
                     <img src="{{ url_for('static', filename='images/red-dot.gif') }}">
                     <p><time>00:00:00</time></p>
