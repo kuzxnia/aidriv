@@ -3,6 +3,7 @@ monkey.patch_all()
 
 import os
 from shutil import disk_usage
+from datetime import datetime, timedelta
 
 import cv2
 from flask import Flask, Response, render_template, send_file, request
@@ -25,8 +26,10 @@ steering = Steering()
 camera = Camera(app.config['GALLERY_FOLDER'])
 model = load_model('model.h5')
 ai_mode = False
-speed = 60
+speed = 65
 stoped = False
+################################
+stop_time = datetime.now()
 calibration = False
 copy_track_vals = initialTrackBarVals.copy()
 
@@ -35,7 +38,7 @@ spawn(camera.get_frames)
 
 
 def generate(cam):
-    global speed, stoped, calibration
+    global speed, stoped, calibration, stop_time
     while True:
         prediction = -1
         coordinate = None
@@ -64,25 +67,15 @@ def generate(cam):
                 print(text, x, y)
                 cv2.putText(frame, text, (coordinate[0][0], coordinate[0][1] - 15), cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 255), 2, cv2.LINE_4)
 
-            #if abs(curve) > 25:
-            #    curve *= -4
-            #    if abs(curve) > 100:
-            #        curve = 100 if curve > 0 else -100
-            #    steering.change_motors_speed_ai(75, curve)
-            #else:
-            #    steering.change_motors_speed_ai(100, curve * -2)
-            #    pass
-            curve *= 4
+            curve *= 2
             if abs(curve) > 100:
                 curve = 100 if curve > 0 else -100
-            if ai_mode:
+            if prediction in [2, 3] and not stoped and stop_time + timedelta(seconds=12) < datetime.now():
+                print('ZATRZYMANIE W CURVE')
+                steering.change_motors_speed(0,0)
+            elif ai_mode and not stoped:
                 print(f'curve {curve}')
                 steering.change_motors_speed_ai(speed, curve)
-
-            # czy konieczne
-            #sleep(1/10 - 1/500)
-            #steering.change_motors_speed(0, 0)
-            #sleep(1/500)
         else:
             frame = cam.frame
 
@@ -96,19 +89,28 @@ def generate(cam):
         yield(b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + 
             bytearray(encodedImage) + b'\r\n')
         
-        if ai_mode and coordinate and 90 > x > 25 and 90 > y > 25:
+        if ai_mode and coordinate:# and 90 > x > 25 and 90 > y > 25:
             if prediction == 0:
-                speed = 40
-            elif prediction == 1:
                 speed = 60
+                print('#####################   WYKRYTO 30')
+            elif prediction == 1:
+                speed = 65
+                print('#####################   WYKRYTO 70')
             elif prediction == 2:
-                if not stoped:
+                print('#####################   WYKRYTO stop')
+                if not stoped and stop_time + timedelta(seconds=12) < datetime.now():
+                    print('ZATRZYMANIE ZE SLEEPEM')
                     steering.change_motors_speed(0, 0)
-                    sleep(4)
+                    #sleep(4)
                     stoped = True
+                    stop_time = datetime.now()
             elif prediction == 3:
+                print('#####################   WYKRYTO zakaaz')
                 steering.change_motors_speed(0, 0)
                 sleep(4)
+
+        if stop_time + timedelta(seconds=4) < datetime.now():
+            stoped = False
 
         sleep(0.01)
 

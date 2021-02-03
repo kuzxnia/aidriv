@@ -1,1 +1,1 @@
-initialTrackBarVals = [5, 155, 0, 240]
+initialTrackBarVals = [59 ,150 ,28 ,240]
